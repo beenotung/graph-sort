@@ -16,6 +16,25 @@ Moreover, this algorithm assumes the items in list cannot be mapped to absolute 
 
 When comparing personnel candidates, non-price sensitive products, colors or flavor.
 
+## Benchmark
+
+The source code of experiment is available in [test/benchmark.ts](./test/benchmark.ts)
+
+Total number of items: 100
+
+| Algorithm  | top N    | number of comparison |
+| ---------- | -------- | -------------------- |
+| GraphSort  | 1        | 288 - 314            |
+| GraphSort  | 3        | 304 - 313            |
+| GraphSort  | 5        | 322 - 330            |
+| GraphSort  | 10       | 327 - 350            |
+| GraphSort  | 20       | 399 - 414            |
+| GraphSort  | 30       | 472 - 486            |
+| Array.sort | 1 to 100 | 533 - 534            |
+| GraphSort  | 40       | 551 - 562            |
+| GraphSort  | 50       | 625 - 638            |
+| GraphSort  | 100      | 905 - 924            |
+
 ## Complexity
 
 The Best Case: O(N-1)
