@@ -170,7 +170,7 @@ Each sorter has its own advantages depending on the number of top items needed:
 
 - `NativeSort`: Utilizes the built-in Array sorting method, and is optimized for selecting a larger number of top items (approximately 40-100 out of 100).
 
-## Benchmark
+## Experimental Benchmark
 
 The benchmark [source code](./test/benchmark.ts) and [raw data](./benchmark.log) used to assess the performance and effectiveness of the sorting algorithms are available in the git repository.
 
