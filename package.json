@@ -5,8 +5,17 @@
   "keywords": [
     "sorting",
     "graph",
-    "manaully",
-    "compare"
+    "manual",
+    "compare",
+    "efficient",
+    "dag",
+    "tree",
+    "native",
+    "algorithm",
+    "top-n",
+    "candidate",
+    "relative sorting",
+    "relative comparison"
   ],
   "author": "Beeno Tung <aabbcc1241@yahoo.com.hk> (https://beeno-tung.surge.sh)",
   "license": "BSD-2-Clause",
