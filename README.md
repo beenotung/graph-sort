@@ -158,10 +158,6 @@ The design assumes the comparison between two items is expensive (e.g. requiring
 
 Moreover, this design assumes the items in list cannot be mapped to absolute values, hence each the items must be compared two-by-two.
 
-## Use Case
-
-When comparing personnel candidates, non-price sensitive products, colors or flavor.
-
 ## Benchmarking
 
 `graph-sort` includes a benchmarking function `benchmarkBestSorter({topN,totalCount})` that tests various sorter classes (`DAGSort`, `TreeSort`, and `NativeSort`) against random samples to determine which performs the least number of comparisons for the provided scenario and returns the most efficient sorter class.
