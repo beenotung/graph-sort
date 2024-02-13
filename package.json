@@ -36,7 +36,6 @@
     "prepublishOnly": "run-s test build"
   },
   "files": [
-    "src",
     "dist"
   ],
   "devDependencies": {
