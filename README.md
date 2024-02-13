@@ -17,9 +17,11 @@ Moreover, this algorithm assumes the items in list cannot be mapped to absolute 
 When comparing personnel candidates, non-price sensitive products, colors or flavor.
 
 ## Complexity
+
 The Best Case: O(N-1)
 
 The Worst Case: TBC
 
 ## License
+
 [BSD-2-Clause](./LICENSE) (Free Open Source Software)

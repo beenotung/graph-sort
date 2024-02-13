@@ -15,7 +15,7 @@
   "scripts": {
     "test": "run-s format tsc mocha",
     "clean": "rimraf dist",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format": "prettier --write .",
     "postformat": "format-json-cli",
     "build": "run-s clean tsc",
     "tsc": "tsc -p tsconfig.build.json",
