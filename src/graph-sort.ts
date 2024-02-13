@@ -196,7 +196,10 @@ class Node<T> {
   incomingNodes = new Set<Node<T>>()
   outgoingNodes = new Set<Node<T>>()
 
-  constructor(public value: T, public group: Group<T>) {}
+  constructor(
+    public value: T,
+    public group: Group<T>,
+  ) {}
 }
 
 function filterSetToArray<T>(set: Set<T>, f: (x: T) => boolean): T[] {
