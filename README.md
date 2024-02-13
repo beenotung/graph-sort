@@ -1,45 +1,235 @@
 # graph-sort
 
-DAG-based sorting algorithm minimizing the number of comparison required to find top N items from a list without absolute value.
+An efficient **sorting algorithm** designed for **selecting the top N items** from a list with **minimal comparisons**, **without mapping the items to absolute numeric values**.
 
 [![npm Package Version](https://img.shields.io/npm/v/graph-sort.svg?maxAge=3600)](https://www.npmjs.com/package/graph-sort)
 
+## Features
+
+- **Minimized Comparisons**: Ideal when comparisons are costly or manual, as this library aim to reduce the number of comparisons.
+
+- **Relative comparison**: The items can be relatively compared (pairwise) without mapping to an absolute numeric value.
+
+- **Dynamic Algorithm Selection**: Automatically chooses the best sorting algorithm from available implementations based on the scenario.
+
+- **Non-Destructive**: The original list of values remains unchanged.
+
+## Use Case
+
+This package is particularly suitable for scenarios where:
+
+- Comparisons between elements are expensive, such as requiring manual input or complex calculations.
+
+- The elements cannot be directly assigned absolute values, necessitating pairwise comparisons.
+
+Examples include ranking personnel candidates (for hiring or dating), non-price sensitive products, or preferences like colors or flavors.
+
+## Usage Example
+
+More usage examples see [example.ts](./test/example.ts), [graph-sort.spec.ts](./test/graph-sort.spec.ts) and [benchmark.ts](./test/benchmark.ts)
+
+```typescript
+import { CompareResult, sortTopN } from 'graph-sort'
+
+// example dating profile
+type Profile = {
+  major: string
+  minor: string | null
+  yearOfEntry: number
+  height: number | null
+  weight: number | null
+  district: string
+  university: string
+}
+
+// user-generated data
+type CompareRecord = {
+  chosen: Profile
+  not_chosen: Profile
+}
+
+function getCandidates() {
+  try {
+    let topN = 3
+    let profiles: Profile[] = loadProfiles()
+    let topNCandidates: Profile[] = sortTopN(compareProfile, topN, profiles)
+    return {
+      type: 'matched',
+      topNCandidates,
+    }
+  } catch (error) {
+    if (error instanceof NotCompared) {
+      let { a, b } = error
+      return {
+        type: 'compare',
+        profiles: [a, b],
+      }
+    }
+    return {
+      type: 'error',
+      message: String(error),
+    }
+  }
+}
+
+function compareProfile(a: Profile, b: Profile): CompareResult<Profile> {
+  let record: CompareRecord | null = findCompareRecord(a, b)
+  if (!record) {
+    // ask user to perform comparison
+    throw new NotCompared(a, b)
+  }
+  return {
+    small: record.not_chosen,
+    large: record.chosen,
+  }
+}
+
+class NotCompared extends Error {
+  constructor(
+    public a: Profile,
+    public b: Profile,
+  ) {
+    super('not compared')
+  }
+}
+
+// load from database
+function loadProfiles(): Profile[]
+
+// load from database
+function findCompareRecord(a: Profile, b: Profile): CompareRecord | null
+```
+
+## Typescript Signature
+
+```typescript
+type CompareResult<T> = { small: T; large: T }
+
+type CompareFn<T> = (a: T, b: T) => CompareResult<T>
+
+/**
+ * @description use the most efficient sorter from `benchmarkBestSorter()`
+ *  to pick `topN` elements from a list of `totalCount` elements.
+ *
+ * @param compareFn comparison function (a,b) => {small, large}
+ * @param topN number of top n largest elements to return
+ * @param values array of elements that is *not updated* in-place
+ *
+ * @returns list of `topN` elements in descending order.
+ */
+function sortTopN<T>(compareFn: CompareFn<T>, topN: number, values: T[]): T[]
+
+/**
+ * @description benchmark against varies sorter.
+ *  Use random samples to find out which sorter requires least number of comparisons
+ *  to pick `topN` elements from a list of `totalCount` elements.
+ *
+ * @returns the most efficient sorter's class (constructor)
+ */
+function benchmarkBestSorter(options: {
+  topN: number
+  totalCount: number
+  /** @description default: max(10, sqrt(totalCount)) */
+  sampleCount?: number
+}): typeof DAGSort | typeof NativeSort | typeof TreeSort
+
+type SorterClass = ReturnType<typeof benchmarkBestSorter>
+
+/** @description for benchmarking */
+let benchmarkCompareFn: CompareFn<number> & {
+  getCompareCount(): number
+  reset(): void
+}
+```
+
 ## How it works
 
-This algorithm used directed acyclic graph (DAG) to represent the ordering of items in a given list.
+This package mainly consists of 3 `Sorter` classes and a helper function `sortTopN()`.
 
-This algorithm assumes the comparison between two items is expensive (e.g. requiring manual input).
+Graph-based Sorter: **DAGSort**, **TreeSort**, and
+Array-based Sorter: **NativeSort**
 
-Moreover, this algorithm assumes the items in list cannot be mapped to absolute values, hence each the items must be compared two-by-two.
+The graph based algorithms use directed acyclic graph (DAG) to represent the ordering of given items;
+the array based algorithm leverage the built-in sort method from Array which tends to be quicksort in most cases.
+
+The helper function `sortTopN(compareFn,topN,values)` will pick the sorter that require least number of comparison to pick `topN` elements from the given `values` by benchmarking against random samples.
+
+The design assumes the comparison between two items is expensive (e.g. requiring manual input).
+
+Moreover, this design assumes the items in list cannot be mapped to absolute values, hence each the items must be compared two-by-two.
 
 ## Use Case
 
 When comparing personnel candidates, non-price sensitive products, colors or flavor.
 
+## Benchmarking
+
+`graph-sort` includes a benchmarking function `benchmarkBestSorter({topN,totalCount})` that tests various sorter classes (`DAGSort`, `TreeSort`, and `NativeSort`) against random samples to determine which performs the least number of comparisons for the provided scenario and returns the most efficient sorter class.
+
+Each sorter has its own advantages depending on the number of top items needed:
+
+- `TreeSort`: Optimized for selecting very few top items (approximately 1-5 out of 100).
+
+- `DAGSort`: Offers balanced performance, particularly for selecting a moderate number of top items (approximately 10-35 out of 100).
+
+- `NativeSort`: Utilizes the built-in Array sorting method, and is optimized for selecting a larger number of top items (approximately 40-100 out of 100).
+
 ## Benchmark
 
-The source code of experiment is available in [test/benchmark.ts](./test/benchmark.ts)
+The benchmark [source code](./test/benchmark.ts) and [raw data](./benchmark.log) used to assess the performance and effectiveness of the sorting algorithms are available in the git repository.
 
 Total number of items: 100
 
+Top N: 1, 2, 3, 5, 10, 20, 30, 40, 50, 100
+
+<details>
+<summary> (click to see details)
+
+| Picking top N | Best Algorithm |
+| ------------- | -------------- |
+| 1 to 5        | TreeSort       |
+| 10 to 30      | DAGSort        |
+| 40 to 100     | NativeSort     |
+
+</summary>
+
 | Algorithm  | top N    | number of comparison |
 | ---------- | -------- | -------------------- |
-| GraphSort  | 1        | 288 - 314            |
-| GraphSort  | 3        | 304 - 313            |
-| GraphSort  | 5        | 322 - 330            |
-| GraphSort  | 10       | 327 - 350            |
-| GraphSort  | 20       | 399 - 414            |
-| GraphSort  | 30       | 472 - 486            |
-| Array.sort | 1 to 100 | 533 - 534            |
-| GraphSort  | 40       | 551 - 562            |
-| GraphSort  | 50       | 625 - 638            |
-| GraphSort  | 100      | 905 - 924            |
+| TreeSort   | 1        | 99                   |
+| TreeSort   | 2        | 148                  |
+| TreeSort   | 3        | 182                  |
+| TreeSort   | 5        | 248                  |
+| DAGSort    | 1        | 303                  |
+| DAGSort    | 2        | 307                  |
+| DAGSort    | 3        | 311                  |
+| DAGSort    | 5        | 319                  |
+| DAGSort    | 10       | 341                  |
+| DAGSort    | 20       | 403                  |
+| TreeSort   | 10       | 408                  |
+| DAGSort    | 30       | 477                  |
+| NativeSort | 1 to 100 | 534                  |
+| DAGSort    | 40       | 559                  |
+| DAGSort    | 50       | 638                  |
+| TreeSort   | 20       | 702                  |
+| DAGSort    | 100      | 910                  |
+| TreeSort   | 30       | 963                  |
+| TreeSort   | 40       | 1192                 |
+| TreeSort   | 50       | 1389                 |
+| TreeSort   | 100      | 1849                 |
+
+</details>
 
 ## Complexity
 
+The complexity of `graph-sort` varies depending on the chosen sorting algorithm for a given task, which is determined dynamically by `benchmarkBestSorter` based on the number of items and the number of top elements to select.
+
 The Best Case: O(N-1)
 
-The Worst Case: TBC
+The Average Case\*: O(N \* log(N))
+
+The Worst Case\*: O(N \* N)
+
+\*: the complexity of average case and worst case are taking reference from quicksort, the actual complexity of graph-sort depends on the number of top N to be picked from the given array. The complexity formulates are yet to be confirmed.
 
 ## License
 

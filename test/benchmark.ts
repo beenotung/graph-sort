@@ -1,106 +1,103 @@
-import { GraphSort } from '../src/graph-sort'
+import { ProgressCli } from '@beenotung/tslib/progress-cli'
+import { SorterClass, benchmarkCompareFn, makeSampleList } from '../src/core'
+import { NativeSort } from '../src/native-sort'
+import { TreeSort } from '../src/tree-sort'
+import { DAGSort } from '../src/dag-sort'
+import { appendFileSync } from 'fs'
 
-function randomList(n: number) {
-  let list = new Array(n)
-  let dict: Record<number, number> = {}
-  for (let i = 0; i < n; i++) {
-    for (;;) {
-      let r = Math.floor(Math.random() * n) + 1
-      if (r in dict) continue
-      list[i] = r
-      dict[r] = i
+let cli = new ProgressCli()
+
+let profiles = [1, 2, 3, 5, 10, 20, 30, 40, 50, 100].map(topN => ({
+  totalCount: 100,
+  topN,
+}))
+
+type Profile = (typeof profiles)[number]
+
+function measureAlgorithm(profile: Profile, Sorter: SorterClass) {
+  let { totalCount, topN } = profile
+  benchmarkCompareFn.reset()
+  let sorter = new Sorter(benchmarkCompareFn)
+  let input = makeSampleList(totalCount)
+  let originalInput = input.slice()
+  sorter.addValues(input)
+  let actualOutput = sorter.popTopN(topN)
+  let compareCount = benchmarkCompareFn.getCompareCount()
+  if (input.toString() != originalInput.toString()) {
+    throw new Error('input updated in-place')
+  }
+  let expectedOutput = input
+    .slice()
+    .sort((a, b) => b - a)
+    .slice(0, topN)
+  if (actualOutput.toString() != expectedOutput.toString()) {
+    console.log({ Sorter, actualOutput, expectedOutput })
+    throw new Error('output not topN')
+  }
+  return { compareCount }
+}
+
+let errorRate = 1 / 100
+
+function benchmarkAlgorithm(profile: Profile, Sorter: SorterClass) {
+  let { totalCount, topN } = profile
+
+  let acc = 0
+  let n = 0
+
+  let startTime = Date.now()
+  let endTime = 0
+  let compareCount = 0
+  let usedTime = 0
+  for (;;) {
+    acc += measureAlgorithm(profile, Sorter).compareCount
+    n++
+    endTime = Date.now()
+
+    if (endTime - startTime > 1000) {
       break
     }
   }
-  return list
-}
 
-interface Sorter<T> {
-  compare_count: number
-  pop(): T
-}
+  for (;;) {
+    let result = measureAlgorithm(profile, Sorter)
+    let diff = Math.abs(result.compareCount - acc / n)
+    acc += result.compareCount
+    n++
+    compareCount = acc / n
+    usedTime = endTime - startTime
 
-type SortAlgorithm<T> = (xs: T[]) => Sorter<T>
+    cli.update(
+      `[${Sorter.name}] top ${topN}/${totalCount}: n=${n.toLocaleString()}, compareCount=${compareCount.toFixed(0)}, usedTime=${(usedTime / 1000).toFixed(1)}sec`,
+    )
 
-function measureAlgorithm(algorithm: SortAlgorithm<number>) {
-  let n = 100
-  let top = 30
-  let input = randomList(n)
-  let sorter = algorithm(input.slice())
-  let output = new Array(n)
-  for (let i = 0; i < top; i++) {
-    output[i] = sorter.pop()
+    if (diff / compareCount > errorRate) {
+      continue
+    }
+
+    cli.nextLine()
+    return { compareCount, n, usedTime }
   }
-  if (
-    output.slice(0, top).toString() !=
-    input
-      .slice()
-      .sort((a, b) => a - b)
-      .reverse()
-      .slice(0, top)
-      .toString()
-  ) {
-    console.log({ input, output })
-    throw new Error('not sorted')
-  }
-  return { input, output, sorter }
 }
 
-function benchmarkAlgorithm(algorithm: SortAlgorithm<number>) {
-  let alpha = 0.9
-  let beta = 1 - alpha
-  let res = measureAlgorithm(algorithm)
-  let compare_count = res.sorter.compare_count
-  for (let i = 0; ; i++) {
-    res = measureAlgorithm(algorithm)
-    compare_count = compare_count * alpha + res.sorter.compare_count * beta
-    console.log(
-      `i: ${i.toLocaleString()}, compare_count: ${compare_count.toLocaleString()}`,
+let logFile = 'benchmark.log'
+
+function log(line: string) {
+  appendFileSync(logFile, line + '\n')
+}
+
+function reportAlgorithm(Sorter: SorterClass) {
+  log(Sorter.name)
+  for (let profile of profiles) {
+    let { totalCount, topN } = profile
+    let { compareCount } = benchmarkAlgorithm(profile, Sorter)
+    log(
+      `top ${topN.toString().padStart(3, ' ')}/${totalCount}: ${compareCount.toFixed(0)}`,
     )
   }
+  log('')
 }
 
-// compare_count
-// top any/100: 533 - 534
-let nativeSort: SortAlgorithm<number> = (xs: number[]): Sorter<number> => {
-  let res: Sorter<number> = {
-    compare_count: 0,
-    pop() {
-      if (xs.length > 0) return xs.pop()!
-      throw new Error('empty')
-    },
-  }
-  xs.sort((a, b) => {
-    res.compare_count++
-    return a - b
-  })
-  return res
-}
-
-// compare_count
-// top 100/100: 905 - 924
-// top  50/100: 625 - 638
-// top  40/100: 551 - 562
-// top  30/100: 472 - 486
-// top  20/100: 399 - 414
-// top  10/100: 327 - 350
-// top   5/100: 322 - 330
-// top   3/100: 304 - 313
-// top   1/100: 288 - 314
-let graphSort: SortAlgorithm<number> = (xs: number[]): Sorter<number> => {
-  let res: Sorter<number> = {
-    compare_count: 0,
-    pop() {
-      return sort.popTop()
-    },
-  }
-  let sort = new GraphSort<number>((a, b) => {
-    res.compare_count++
-    return a < b ? { small: a, large: b } : { small: b, large: a }
-  })
-  sort.addValues(xs)
-  return res
-}
-
-// benchmarkAlgorithm(nativeSort)
-benchmarkAlgorithm(graphSort)
+reportAlgorithm(NativeSort)
+reportAlgorithm(TreeSort)
+reportAlgorithm(DAGSort)

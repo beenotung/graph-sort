@@ -1,6 +1,10 @@
-export type CompareFn<T> = (a: T, b: T) => { small: T; large: T }
+import { CompareFn, Sorter } from './utils'
 
-export class GraphSort<T> {
+/**
+ * @description DAG-based, balanced performance.
+ * better than Tree-based and native sort when picking top 10-35 / 100 items
+ * */
+export class DAGSort<T> extends Sorter<T> {
   groups = new Groups<T>()
 
   // indices
@@ -8,7 +12,9 @@ export class GraphSort<T> {
   heads = new Set<Node<T>>()
   tails = new Set<Node<T>>()
 
-  constructor(public compareFn: CompareFn<T>) {}
+  constructor(compareFn: CompareFn<T>) {
+    super(compareFn)
+  }
 
   addValues(values: T[]) {
     for (const value of values) {
@@ -21,17 +27,12 @@ export class GraphSort<T> {
     }
   }
 
-  popTopN(n: number): T[] {
-    const topNValues: T[] = []
-    for (let i = 0; i < n; i++) {
-      topNValues.push(this.popTop())
-    }
-    return topNValues
-  }
-
   popTop(): T {
     while (this.groups.size > 1) {
       this.findAndConnect()
+    }
+    if (this.groups.size == 0) {
+      throw new Error('cannot pop from empty graph')
     }
     const group: Group<T> = Array.from(this.groups.groups)[0]
     const head = group.popTop(this)
@@ -146,7 +147,7 @@ class Group<T> {
     ).sort((a, b) => a.outgoingNodes.size - b.outgoingNodes.size)[0]
   }
 
-  popTop(graph: GraphSort<T>): Node<T> {
+  popTop(graph: DAGSort<T>): Node<T> {
     for (;;) {
       const heads = filterSetToArray(
         this.nodes,
@@ -175,7 +176,7 @@ class Group<T> {
     }
   }
 
-  connectTwoHeads(from: Node<T>, to: Node<T>, graph: GraphSort<T>) {
+  connectTwoHeads(from: Node<T>, to: Node<T>, graph: DAGSort<T>) {
     graph.heads.delete(from)
     from.outgoingNodes.add(to)
     to.incomingNodes.add(from)

@@ -1,16 +1,14 @@
 import { expect } from 'chai'
 import { SinonSpy, spy } from 'sinon'
-import { CompareFn, GraphSort } from '../src/graph-sort'
+import { CompareFn, sortTopN } from '../src/core'
 
 describe('graph-sort TestSuit', () => {
   let compareFn: CompareFn<number> = (a, b) =>
     a < b ? { small: a, large: b } : { large: a, small: b }
 
   let compareFnSpy: SinonSpy
-  let graph: GraphSort<number>
   beforeEach(() => {
     compareFnSpy = spy(compareFn)
-    graph = new GraphSort(compareFnSpy)
   })
 
   function test(values: number[]) {
@@ -24,8 +22,7 @@ describe('graph-sort TestSuit', () => {
       })
       .reverse()
       .slice(0, topN)
-    graph.addValues(values)
-    let actualTopNValues = graph.popTopN(topN)
+    let actualTopNValues = sortTopN(compareFnSpy, topN, values)
     expect(actualTopNValues).deep.equals(expectedTopNValues)
     expect(compareFnSpy.callCount).greaterThan(N - 2)
     expect(compareFnSpy.callCount).lessThan(N * (N - 1))
@@ -45,19 +42,17 @@ describe('graph-sort TestSuit', () => {
     let values = [1, 2, 3, 4, 5, 6, 7, 8]
     let N = values.length
     let topN = 5
-    graph.addValues(values)
-    let actualTopNValues = graph.popTopN(topN)
+    let actualTopNValues = sortTopN(compareFnSpy, topN, values)
     expect(actualTopNValues).deep.equals([8, 7, 6, 5, 4])
-    expect(compareFnSpy.callCount).equals(N - 1)
+    expect(compareFnSpy.callCount).greaterThanOrEqual(N - 1)
   })
   it('should sort numbers in reversed sorted case', function () {
     let values = [1, 2, 3, 4, 5, 6, 7, 8].reverse()
     let N = values.length
     let topN = 5
-    graph.addValues(values)
-    let actualTopNValues = graph.popTopN(topN)
+    let actualTopNValues = sortTopN(compareFnSpy, topN, values)
     expect(actualTopNValues).deep.equals([8, 7, 6, 5, 4])
-    expect(compareFnSpy.callCount).equals((N - 1) * 2)
+    expect(compareFnSpy.callCount).greaterThanOrEqual(N - 1)
   })
 
   it('should sort large number of numbers', function () {
@@ -81,9 +76,7 @@ describe('graph-sort TestSuit', () => {
         : { large: a, small: b }
     }
     compareFnSpy = spy(compareFn)
-    graph = new GraphSort(compareFnSpy)
-    graph.addValues(values)
-    let actualTopNValues = graph.popTopN(N)
+    let actualTopNValues = sortTopN(compareFnSpy, N, values)
     expect(actualTopNValues).length(N)
     expect(actualTopNValues).not.deep.equals(values)
     expect(new Set(actualTopNValues)).deep.equals(new Set(values))
