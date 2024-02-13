@@ -10,7 +10,7 @@ An efficient **sorting algorithm** designed for **selecting the top N items** fr
 
 - **Relative comparison**: The items can be relatively compared (pairwise) without mapping to an absolute numeric value.
 
-- **Dynamic Algorithm Selection**: Automatically chooses the best sorting algorithm from available implementations based on the scenario.
+- **Dynamic Algorithm Selection**: Automatically chooses the best sorting algorithm from available implementations based on the scenario (explained in [how-it-works](#how-it-works) and [benchmarking](#benchmarking) sections).
 
 - **Non-Destructive**: The original list of values remains unchanged.
 
