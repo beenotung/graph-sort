@@ -1,6 +1,6 @@
 {
   "name": "graph-sort",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "DAG-based sorting algorithm minimizing the number of comparison required to find top N items from a list without absolute value",
   "keywords": [
     "sorting",
