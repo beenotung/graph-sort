@@ -1,8 +1,3 @@
-import debug from 'debug'
-
-const log = debug('graph-sort')
-// log.enabled = true
-
 export type CompareFn<T> = (a: T, b: T) => { small: T; large: T }
 
 export class GraphSort<T> {
@@ -41,7 +36,6 @@ export class GraphSort<T> {
     const group: Group<T> = Array.from(this.groups.groups)[0]
     const head = group.popTop(this)
     this.heads.delete(head)
-    log(`pop`, head.value)
     return head.value
   }
 
@@ -50,10 +44,8 @@ export class GraphSort<T> {
     const result = this.compareFn(node1.value, node2.value)
     // should connect: (from) small -> (to) large
     if (result.small === node1.value) {
-      log(`connect ${node1.value} -> ${node2.value}`)
       this.connect(node1, node2)
     } else {
-      log(`connect ${node1.value} <- ${node2.value}`)
       this.connect(node2, node1)
     }
   }
@@ -174,10 +166,8 @@ class Group<T> {
         const result = graph.compareFn(from.value, to.value)
         // should connect: (from) small -> (to) large
         if (result.small === from.value) {
-          log(`connect ${from.value} -> ${to.value}`)
           this.connectTwoHeads(from, to, graph)
         } else {
-          log(`connect ${from.value} <- ${to.value}`)
           this.connectTwoHeads(to, from, graph)
           from = to
         }
