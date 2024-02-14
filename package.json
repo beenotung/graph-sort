@@ -19,8 +19,8 @@
   ],
   "author": "Beeno Tung <aabbcc1241@yahoo.com.hk> (https://beeno-tung.surge.sh)",
   "license": "BSD-2-Clause",
-  "main": "dist/graph-sort.js",
-  "types": "dist/graph-sort.d.ts",
+  "main": "dist/core.js",
+  "types": "dist/core.d.ts",
   "scripts": {
     "test": "run-s format tsc mocha",
     "clean": "rimraf dist",
