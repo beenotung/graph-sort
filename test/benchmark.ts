@@ -65,6 +65,7 @@ function benchmarkAlgorithm(profile: Profile, Sorter: SorterClass) {
     acc += result.compareCount
     n++
     compareCount = acc / n
+    endTime = Date.now()
     usedTime = endTime - startTime
 
     cli.update(
