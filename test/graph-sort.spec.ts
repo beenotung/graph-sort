@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { SinonSpy, spy } from 'sinon'
-import { CompareFn, sortTopN } from '../src/core'
+import { CompareFn, sortTopN } from '../src'
 
 describe('graph-sort TestSuit', () => {
   let compareFn: CompareFn<number> = (a, b) =>
