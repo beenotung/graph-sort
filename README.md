@@ -24,6 +24,14 @@ This package is particularly suitable for scenarios where:
 
 Examples include ranking personnel candidates (for hiring or dating), non-price sensitive products, or preferences like colors or flavors.
 
+## Installation
+
+```bash
+npm install graph-sort
+```
+
+You can also install this package with yarn, pnpm or slnpm.
+
 ## Usage Example
 
 More usage examples see [example.ts](./test/example.ts), [graph-sort.spec.ts](./test/graph-sort.spec.ts) and [benchmark.ts](./test/benchmark.ts)
