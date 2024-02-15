@@ -27,6 +27,21 @@ export function sortTopN<T>(
 }
 
 /**
+ * @description generator version of `sortTopN`
+ * @returns iterator (generator) of `topN` elements in descending order.
+ */
+export function* sortTopNIter<T>(
+  compareFn: CompareFn<T>,
+  topN: number,
+  values: T[],
+): Generator<T> {
+  let Sorter = benchmarkBestSorter({ topN, totalCount: values.length })
+  let sorter = new Sorter<T>(compareFn)
+  sorter.addValues(values)
+  return sorter.popTopNIter(topN)
+}
+
+/**
  * @description benchmark against varies sorter.
  *  Use random samples to find out which sorter requires least number of comparisons
  *  to pick `topN` elements from a list of `totalCount` elements.

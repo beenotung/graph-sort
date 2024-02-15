@@ -17,6 +17,12 @@ export abstract class Sorter<T> {
     return topNValues
   }
 
+  *popTopNIter(n: number): Generator<T> {
+    for (let i = 0; i < n; i++) {
+      yield this.popTop()
+    }
+  }
+
   compareTwoNodes<Node extends { value: T }>(
     a: Node,
     b: Node,

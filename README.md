@@ -102,6 +102,8 @@ function findCompareRecord(a: Profile, b: Profile): CompareRecord | null
 
 ## Typescript Signature
 
+**Main types**:
+
 ```typescript
 type CompareResult<T> = { small: T; large: T }
 
@@ -118,6 +120,16 @@ type CompareFn<T> = (a: T, b: T) => CompareResult<T>
  * @returns list of `topN` elements in descending order.
  */
 function sortTopN<T>(compareFn: CompareFn<T>, topN: number, values: T[]): T[]
+
+/**
+ * @description generator version of `sortTopN`
+ * @returns iterator (generator) of `topN` elements in descending order.
+ */
+export function sortTopNIter<T>(
+  compareFn: CompareFn<T>,
+  topN: number,
+  values: T[],
+): Generator<T>
 
 /**
  * @description benchmark against varies sorter.
@@ -156,6 +168,8 @@ export abstract class Sorter<T> {
   abstract popTop(): T
 
   popTopN(n: number): T[]
+
+  popTopNIter(n: number): Generator<T>
 
   compareTwoNodes<Node extends { value: T }>(
     a: Node,
