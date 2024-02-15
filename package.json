@@ -19,8 +19,19 @@
   ],
   "author": "Beeno Tung <aabbcc1241@yahoo.com.hk> (https://beeno-tung.surge.sh)",
   "license": "BSD-2-Clause",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/beenotung/graph-sort.git"
+  },
+  "homepage": "https://github.com/beenotung/graph-sort#readme",
+  "bugs": {
+    "url": "https://github.com/beenotung/graph-sort/issues"
+  },
   "main": "dist/core.js",
   "types": "dist/core.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "test": "run-s format tsc mocha",
     "clean": "rimraf dist",
@@ -35,9 +46,6 @@
     "report": "run-s report:update report:open",
     "prepublishOnly": "run-s test build"
   },
-  "files": [
-    "dist"
-  ],
   "devDependencies": {
     "@beenotung/tslib": "^23.4.0",
     "@types/chai": "^4.3.11",
@@ -56,13 +64,5 @@
     "ts-mocha": "^10.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/beenotung/graph-sort.git"
-  },
-  "bugs": {
-    "url": "https://github.com/beenotung/graph-sort/issues"
-  },
-  "homepage": "https://github.com/beenotung/graph-sort#readme"
+  }
 }
