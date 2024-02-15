@@ -5,8 +5,8 @@ import { CompareFn, Sorter } from './utils'
  * better than DAG-based sort when picking top 40-100 / 100 items
  */
 export class NativeSort<T> extends Sorter<T> {
-  values: T[] = []
-  sorted = false
+  protected values: T[] = []
+  protected sorted = false
 
   constructor(compareFn: CompareFn<T>) {
     super(compareFn)

@@ -142,6 +142,84 @@ let benchmarkCompareFn: CompareFn<number> & {
 }
 ```
 
+<details>
+<summary>internal types (lower level but feel free to build on-top of them)</summary>
+
+```typescript
+export abstract class Sorter<T> {
+  compareFn: CompareFn<T>
+
+  constructor(compareFn: CompareFn<T>)
+
+  abstract addValues(values: T[]): void
+
+  abstract popTop(): T
+
+  popTopN(n: number): T[]
+
+  compareTwoNodes<Node extends { value: T }>(
+    a: Node,
+    b: Node,
+  ): CompareResult<Node>
+}
+```
+
+```typescript
+export class DAGSort<T> extends Sorter<T> {
+  groups: Groups<T>
+  orphans: Set<Node<T>>
+  heads: Set<Node<T>>
+  tails: Set<Node<T>>
+  constructor(compareFn: CompareFn<T>)
+  findAndConnect(): void
+  connect(from: Node<T>, to: Node<T>): void
+  findTwoNodesToConnect(): [Node<T>, Node<T>]
+}
+class Groups<T> {
+  groups: Set<Group<T>>
+  get size(): number
+  newGroup(): Group<T>
+  findTwoSmallGroups(): [Group<T>, Group<T>]
+  mergeGroups(a: Group<T>, b: Group<T>): void
+}
+class Group<T> {
+  nodes: Set<Node<T>>
+  get size(): number
+  findHead(): Node<T>
+  findTail(): Node<T>
+  popTop(graph: DAGSort<T>): Node<T>
+  connectTwoHeads(from: Node<T>, to: Node<T>, graph: DAGSort<T>): void
+}
+class Node<T> {
+  value: T
+  group: Group<T>
+  incomingNodes: Set<Node<T>>
+  outgoingNodes: Set<Node<T>>
+  constructor(value: T, group: Group<T>)
+}
+```
+
+```typescript
+export class TreeSort<T> extends Sorter<T> {
+  topNodes: Node<T>[]
+}
+class Node<T> {
+  value: T
+  largerNodes: Set<Node<T>>
+  smallerNodes: Set<Node<T>>
+  constructor(value: T)
+}
+```
+
+```typescript
+export class NativeSort<T> extends Sorter<T> {
+  protected values: T[]
+  protected sorted: boolean
+}
+```
+
+</details>
+
 ## How it works
 
 This package mainly consists of 3 `Sorter` classes and a helper function `sortTopN()`.

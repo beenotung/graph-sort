@@ -17,7 +17,10 @@ export abstract class Sorter<T> {
     return topNValues
   }
 
-  compareTwoNodes<Node extends { value: T }>(a: Node, b: Node) {
+  compareTwoNodes<Node extends { value: T }>(
+    a: Node,
+    b: Node,
+  ): CompareResult<Node> {
     let result = this.compareFn(a.value, b.value)
     return result.small == a.value
       ? { small: a, large: b }

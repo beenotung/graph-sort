@@ -2,7 +2,6 @@ import { DAGSort } from './dag-sort'
 import { NativeSort } from './native-sort'
 import { TreeSort } from './tree-sort'
 import { CompareFn } from './utils'
-export { CompareResult, CompareFn } from './utils'
 
 let { max, floor, sqrt } = Math
 
