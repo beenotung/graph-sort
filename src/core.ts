@@ -42,13 +42,37 @@ export function* sortTopNIter<T>(
 }
 
 /**
- * @description benchmark against varies sorter.
- *  Use random samples to find out which sorter requires least number of comparisons
- *  to pick `topN` elements from a list of `totalCount` elements.
+ * @description shortcut of `benchmarkSorters()`
  *
  * @returns the most efficient sorter's class (constructor)
  */
 export function benchmarkBestSorter(options: {
+  topN: number
+  totalCount: number
+  /** @description default: max(10, sqrt(totalCount)) */
+  sampleCount?: number
+}) {
+  let { topN } = options
+  if (topN <= 3) {
+    return TreeSort
+  }
+  if (topN >= 40) {
+    return DAGSort
+  }
+  let [{ Sorter }] = benchmarkSorters(options)
+  return Sorter
+}
+
+export type SorterClass = ReturnType<typeof benchmarkBestSorter>
+
+/**
+ * @description benchmark against varies sorter.
+ *  Use random samples to find out which sorter requires least number of comparisons
+ *  to pick `topN` elements from a list of `totalCount` elements.
+ *
+ * @returns array of {averageCompareCount,Sorter}
+ */
+export function benchmarkSorters(options: {
   topN: number
   totalCount: number
   /** @description default: max(10, sqrt(totalCount)) */
@@ -62,33 +86,27 @@ export function benchmarkBestSorter(options: {
   }
 
   let sampleCount = options.sampleCount || max(10, floor(sqrt(totalCount)))
-  if (topN >= 40) {
-    return DAGSort
-  }
+
   let samplesList: number[][] = new Array(sampleCount)
   for (let i = 0; i < sampleCount; i++) {
     samplesList[i] = makeSampleList(totalCount)
   }
 
-  let slots = [NativeSort, DAGSort, TreeSort].map(Class => {
+  let slots = [NativeSort, DAGSort, TreeSort].map(Sorter => {
     benchmarkCompareFn.reset()
     for (let i = 0; i < sampleCount; i++) {
-      let sorter = new Class(benchmarkCompareFn)
+      let sorter = new Sorter(benchmarkCompareFn)
       sorter.addValues(samplesList[i].slice())
       sorter.popTopN(topN)
     }
     return {
-      compareCount: benchmarkCompareFn.getCompareCount() / sampleCount,
-      Class,
+      averageCompareCount: benchmarkCompareFn.getCompareCount() / sampleCount,
+      Sorter,
     }
   })
-  slots.sort((a, b) => a.compareCount - b.compareCount)
-  let bestSlot = slots[0]
-
-  return bestSlot.Class
+  slots.sort((a, b) => a.averageCompareCount - b.averageCompareCount)
+  return slots
 }
-
-export type SorterClass = ReturnType<typeof benchmarkBestSorter>
 
 /** @description for benchmarking */
 export let benchmarkCompareFn = (function () {

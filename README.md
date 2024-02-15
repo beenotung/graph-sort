@@ -133,16 +133,14 @@ function sortTopN<T>(compareFn: CompareFn<T>, topN: number, values: T[]): T[]
  * @description generator version of `sortTopN`
  * @returns iterator (generator) of `topN` elements in descending order.
  */
-export function sortTopNIter<T>(
+function sortTopNIter<T>(
   compareFn: CompareFn<T>,
   topN: number,
   values: T[],
 ): Generator<T>
 
 /**
- * @description benchmark against varies sorter.
- *  Use random samples to find out which sorter requires least number of comparisons
- *  to pick `topN` elements from a list of `totalCount` elements.
+ * @description shortcut of `benchmarkSorters()`
  *
  * @returns the most efficient sorter's class (constructor)
  */
@@ -154,6 +152,23 @@ function benchmarkBestSorter(options: {
 }): typeof DAGSort | typeof NativeSort | typeof TreeSort
 
 type SorterClass = ReturnType<typeof benchmarkBestSorter>
+
+/**
+ * @description benchmark against varies sorter.
+ *  Use random samples to find out which sorter requires least number of comparisons
+ *  to pick `topN` elements from a list of `totalCount` elements.
+ *
+ * @returns array of {averageCompareCount,Sorter}
+ */
+function benchmarkSorters(options: {
+  topN: number
+  totalCount: number
+  /** @description default: max(10, sqrt(totalCount)) */
+  sampleCount?: number
+}): {
+  averageCompareCount: number
+  Sorter: typeof DAGSort | typeof NativeSort | typeof TreeSort
+}[]
 
 /** @description for benchmarking */
 let benchmarkCompareFn: CompareFn<number> & {
