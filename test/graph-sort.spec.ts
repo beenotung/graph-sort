@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { SinonSpy, spy } from 'sinon'
-import { CompareFn, sortTopN } from '../src'
+import { CompareFn, sortTopN, sortTopNIter } from '../src'
 
 describe('graph-sort TestSuit', () => {
   let compareFn: CompareFn<number> = (a, b) =>
@@ -23,6 +23,15 @@ describe('graph-sort TestSuit', () => {
       .reverse()
       .slice(0, topN)
     let actualTopNValues = sortTopN(compareFnSpy, topN, values)
+    expect(actualTopNValues).deep.equals(expectedTopNValues)
+    expect(compareFnSpy.callCount).greaterThan(N - 2)
+    expect(compareFnSpy.callCount).lessThan(N * (N - 1))
+    compareFnSpy.resetHistory()
+
+    actualTopNValues = []
+    for (let value of sortTopNIter(compareFnSpy, topN, values)) {
+      actualTopNValues.push(value)
+    }
     expect(actualTopNValues).deep.equals(expectedTopNValues)
     expect(compareFnSpy.callCount).greaterThan(N - 2)
     expect(compareFnSpy.callCount).lessThan(N * (N - 1))

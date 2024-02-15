@@ -38,7 +38,7 @@ export function* sortTopNIter<T>(
   let Sorter = benchmarkBestSorter({ topN, totalCount: values.length })
   let sorter = new Sorter<T>(compareFn)
   sorter.addValues(values)
-  return sorter.popTopNIter(topN)
+  yield* sorter.popTopNIter(topN)
 }
 
 /**
