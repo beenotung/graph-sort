@@ -37,7 +37,7 @@ function measureAlgorithm(profile: Profile, Sorter: SorterClass) {
   return { compareCount }
 }
 
-let errorRate = 1 / 100
+const MaxErrorRate = 1 / 100
 
 function benchmarkAlgorithm(profile: Profile, Sorter: SorterClass) {
   let { totalCount, topN } = profile
@@ -67,12 +67,13 @@ function benchmarkAlgorithm(profile: Profile, Sorter: SorterClass) {
     compareCount = acc / n
     endTime = Date.now()
     usedTime = endTime - startTime
+    let errorRate = diff / compareCount
 
     cli.update(
-      `[${Sorter.name}] top ${topN}/${totalCount}: n=${n.toLocaleString()}, compareCount=${compareCount.toFixed(0)}, usedTime=${(usedTime / 1000).toFixed(1)}sec`,
+      `[${Sorter.name}] top ${topN}/${totalCount}: n=${n.toLocaleString()}, compareCount=${compareCount.toFixed(0)}, usedTime=${(usedTime / 1000).toFixed(1)}sec, errorRate=${errorRate.toFixed(2)}`,
     )
 
-    if (diff / compareCount > errorRate) {
+    if (errorRate > MaxErrorRate) {
       continue
     }
 
