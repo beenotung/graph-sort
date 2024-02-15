@@ -143,7 +143,7 @@ let benchmarkCompareFn: CompareFn<number> & {
 ```
 
 <details>
-<summary>internal types (lower level but feel free to build on-top of them)</summary>
+<summary>Internal types (lower level but feel free to build on-top of them)</summary>
 
 ```typescript
 export abstract class Sorter<T> {
