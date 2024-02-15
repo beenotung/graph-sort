@@ -20,10 +20,6 @@ export function sortTopN<T>(
   topN: number,
   values: T[],
 ): T[] {
-  let size = values.length
-  if (topN > size) {
-    throw new Error('given values has less than n elements')
-  }
   let Sorter = benchmarkBestSorter({ topN, totalCount: values.length })
   let sorter = new Sorter<T>(compareFn)
   sorter.addValues(values)
@@ -43,14 +39,20 @@ export function benchmarkBestSorter(options: {
   /** @description default: max(10, sqrt(totalCount)) */
   sampleCount?: number
 }) {
-  let sampleCount =
-    options.sampleCount || max(10, floor(sqrt(options.totalCount)))
-  if (options.topN >= 40) {
+  let { topN, totalCount } = options
+  if (topN > totalCount) {
+    throw new Error(
+      `cannot pick top ${topN} candidates from ${totalCount} elements`,
+    )
+  }
+
+  let sampleCount = options.sampleCount || max(10, floor(sqrt(totalCount)))
+  if (topN >= 40) {
     return DAGSort
   }
   let samplesList: number[][] = new Array(sampleCount)
   for (let i = 0; i < sampleCount; i++) {
-    samplesList[i] = makeSampleList(options.totalCount)
+    samplesList[i] = makeSampleList(totalCount)
   }
 
   let slots = [NativeSort, DAGSort, TreeSort].map(Class => {
@@ -58,7 +60,7 @@ export function benchmarkBestSorter(options: {
     for (let i = 0; i < sampleCount; i++) {
       let sorter = new Class(benchmarkCompareFn)
       sorter.addValues(samplesList[i].slice())
-      sorter.popTopN(options.topN)
+      sorter.popTopN(topN)
     }
     return {
       compareCount: benchmarkCompareFn.getCompareCount() / sampleCount,
