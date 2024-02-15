@@ -41,17 +41,29 @@ export function* sortTopNIter<T>(
   yield* sorter.popTopNIter(topN)
 }
 
+export type BenchmarkOptions = {
+  topN: number
+  totalCount: number
+  /** @description default: max(10, sqrt(totalCount)) */
+  sampleCount?: number
+  /**
+   * @description sample at least this amount of ms,
+   * @default 0
+   * */
+  minTimeout?: number
+  /**
+   * @description sample at max this amount of ms, default: never
+   * @default never
+   */
+  maxTimeout?: number
+}
+
 /**
  * @description shortcut of `benchmarkSorters()`
  *
  * @returns the most efficient sorter's class (constructor)
  */
-export function benchmarkBestSorter(options: {
-  topN: number
-  totalCount: number
-  /** @description default: max(10, sqrt(totalCount)) */
-  sampleCount?: number
-}) {
+export function benchmarkBestSorter(options: BenchmarkOptions) {
   let { topN } = options
   if (topN <= 3) {
     return TreeSort
@@ -72,13 +84,8 @@ export type SorterClass = ReturnType<typeof benchmarkBestSorter>
  *
  * @returns array of {averageCompareCount,Sorter}
  */
-export function benchmarkSorters(options: {
-  topN: number
-  totalCount: number
-  /** @description default: max(10, sqrt(totalCount)) */
-  sampleCount?: number
-}) {
-  let { topN, totalCount } = options
+export function benchmarkSorters(options: BenchmarkOptions) {
+  let { topN, totalCount, minTimeout, maxTimeout } = options
   if (topN > totalCount) {
     throw new Error(
       `cannot pick top ${topN} candidates from ${totalCount} elements`,
@@ -94,13 +101,28 @@ export function benchmarkSorters(options: {
 
   let slots = [NativeSort, DAGSort, TreeSort].map(Sorter => {
     benchmarkCompareFn.reset()
-    for (let i = 0; i < sampleCount; i++) {
+    let actualSampleCount = 0
+    let startTime = Date.now()
+    for (;;) {
       let sorter = new Sorter(benchmarkCompareFn)
-      sorter.addValues(samplesList[i].slice())
+      if (samplesList.length <= actualSampleCount) {
+        samplesList.push(makeSampleList(totalCount))
+      }
+      sorter.addValues(samplesList[actualSampleCount].slice())
       sorter.popTopN(topN)
+      actualSampleCount++
+      if (minTimeout || maxTimeout) {
+        let passedTime = Date.now() - startTime
+        if (minTimeout)
+          if (passedTime < minTimeout) continue
+          else if (actualSampleCount >= sampleCount) break
+        if (maxTimeout && passedTime >= maxTimeout) break
+      } else if (actualSampleCount >= sampleCount) break
     }
     return {
-      averageCompareCount: benchmarkCompareFn.getCompareCount() / sampleCount,
+      averageCompareCount:
+        benchmarkCompareFn.getCompareCount() / actualSampleCount,
+      sampleCount: actualSampleCount,
       Sorter,
     }
   })

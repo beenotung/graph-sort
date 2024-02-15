@@ -139,17 +139,31 @@ function sortTopNIter<T>(
   values: T[],
 ): Generator<T>
 
+type BenchmarkOptions = {
+  topN: number
+  totalCount: number
+  /** @description default: max(10, sqrt(totalCount)) */
+  sampleCount?: number
+  /**
+   * @description sample at least this amount of ms,
+   * @default 0
+   * */
+  minTimeout?: number
+  /**
+   * @description sample at max this amount of ms, default: never
+   * @default never
+   */
+  maxTimeout?: number
+}
+
 /**
  * @description shortcut of `benchmarkSorters()`
  *
  * @returns the most efficient sorter's class (constructor)
  */
-function benchmarkBestSorter(options: {
-  topN: number
-  totalCount: number
-  /** @description default: max(10, sqrt(totalCount)) */
-  sampleCount?: number
-}): typeof DAGSort | typeof NativeSort | typeof TreeSort
+function benchmarkBestSorter(
+  options: BenchmarkOptions,
+): typeof DAGSort | typeof NativeSort | typeof TreeSort
 
 type SorterClass = ReturnType<typeof benchmarkBestSorter>
 
@@ -160,13 +174,9 @@ type SorterClass = ReturnType<typeof benchmarkBestSorter>
  *
  * @returns array of {averageCompareCount,Sorter}
  */
-function benchmarkSorters(options: {
-  topN: number
-  totalCount: number
-  /** @description default: max(10, sqrt(totalCount)) */
-  sampleCount?: number
-}): {
+function benchmarkSorters(options: BenchmarkOptions): {
   averageCompareCount: number
+  sampleCount: number
   Sorter: typeof DAGSort | typeof NativeSort | typeof TreeSort
 }[]
 
